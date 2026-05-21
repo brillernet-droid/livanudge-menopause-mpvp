@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #0f172a;
+  background: #f8fafc;
+  font-family:
+    "Inter", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui,
+    -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-size: 18px;
+  background: #dff3ef;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #14b8a6;
+  outline-offset: 2px;
+}
+
+.app-shell {
+  width: min(100vw, 430px);
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: linear-gradient(180deg, #fff8f6 0%, #f1fbf8 52%, #f8fafc 100%);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08), 0 24px 70px rgba(15, 23, 42, 0.18);
+}
+
+.mobile-container {
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+}
+
+.mobile-bottom-nav {
+  left: 50%;
+  width: min(100vw, 430px);
+  transform: translateX(-50%);
+}
+
+.card {
+  border: 1px solid #fae8e8;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+}
+
+.hero-card {
+  border: 1px solid rgba(20, 184, 166, 0.24);
+  background:
+    radial-gradient(circle at 86% 18%, rgba(251, 113, 133, 0.18), transparent 26%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(240, 253, 250, 0.96));
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.09);
+}
+
+.large-tap {
+  min-height: 56px;
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    box-shadow: none;
+  }
+
+  .card {
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  }
+}
