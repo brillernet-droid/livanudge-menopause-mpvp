@@ -16,6 +16,7 @@ export const appCopy = {
     },
     womanNav: {
       home: "今日",
+      setup: "入組",
       record: "記錄",
       weekly: "週報",
       me: "我的"
@@ -229,6 +230,7 @@ export const appCopy = {
     },
     womanNav: {
       home: "Today",
+      setup: "Setup",
       record: "Record",
       weekly: "Weekly",
       me: "Me"
@@ -655,6 +657,15 @@ const optionLabels = {
   anxious: { [ZH_HK]: "焦慮", [ZH_CN]: "焦虑", [EN]: "Anxious" },
   low: { [ZH_HK]: "低落", [ZH_CN]: "低落", [EN]: "Low" },
   irritable: { [ZH_HK]: "易怒", [ZH_CN]: "易怒", [EN]: "Irritable" },
+  mild: { [ZH_HK]: "輕微", [ZH_CN]: "轻微", [EN]: "Mild" },
+  moderate: { [ZH_HK]: "中等", [ZH_CN]: "中等", [EN]: "Moderate" },
+  severe: { [ZH_HK]: "較嚴重", [ZH_CN]: "较严重", [EN]: "Severe" },
+  normal: { [ZH_HK]: "正常", [ZH_CN]: "正常", [EN]: "Normal" },
+  watch: { [ZH_HK]: "需要留意", [ZH_CN]: "需要留意", [EN]: "Watch" },
+  high: { [ZH_HK]: "偏高", [ZH_CN]: "偏高", [EN]: "High" },
+  phone: { [ZH_HK]: "電話", [ZH_CN]: "电话", [EN]: "Phone" },
+  whatsapp: { [ZH_HK]: "WhatsApp", [ZH_CN]: "WhatsApp", [EN]: "WhatsApp" },
+  in_app: { [ZH_HK]: "App 內提醒", [ZH_CN]: "App 内提醒", [EN]: "In-app reminder" },
   partner: { [ZH_HK]: "伴侶", [ZH_CN]: "伴侣", [EN]: "Partner" },
   daughter: { [ZH_HK]: "女兒", [ZH_CN]: "女儿", [EN]: "Daughter" },
   friend: { [ZH_HK]: "朋友", [ZH_CN]: "朋友", [EN]: "Friend" }
@@ -729,7 +740,7 @@ export function languageName(language, currentLanguage = language) {
   const labels = {
     [ZH_HK]: { [ZH_HK]: "繁體中文", [ZH_CN]: "繁体中文", [EN]: "Traditional" },
     [ZH_CN]: { [ZH_HK]: "簡體中文", [ZH_CN]: "简体中文", [EN]: "Simplified" },
-    [EN]: { [ZH_HK]: "English", [ZH_CN]: "English", [EN]: "English" }
+    [EN]: { [ZH_HK]: "英文", [ZH_CN]: "英文", [EN]: "English" }
   };
   return labels[language]?.[currentLanguage] || language;
 }

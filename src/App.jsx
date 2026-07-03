@@ -18,7 +18,13 @@ import {
 } from "./i18n.js";
 import * as api from "./services/livanudgeApi.js";
 
-const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Hong_Kong" }).format(new Date());
+function hkDate(offsetDays = 0) {
+  const date = new Date();
+  date.setDate(date.getDate() + offsetDays);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Hong_Kong" }).format(date);
+}
+
+const today = hkDate();
 const STORAGE_KEY = "livanudge-menopause-mpvp-state";
 
 const defaultUser = {
@@ -50,6 +56,27 @@ const defaultCheckin = {
   severe_breathless: false,
   severe_headache_neuro: false,
   self_harm_thoughts: false
+};
+
+const defaultTrialSetup = {
+  enrolment_date: today,
+  pilot_week: 1,
+  next_review_date: hkDate(7),
+  eligibility_age_confirmed: true,
+  eligibility_hk_resident: true,
+  eligibility_smartphone_access: true,
+  consent_lifestyle_only: false,
+  consent_data_use: false,
+  consent_followup: false,
+  consent_deidentified_export: false,
+  baseline_saved: false,
+  baseline_hot_flash_burden: "moderate",
+  baseline_sleep_impact: "moderate",
+  baseline_mood_stress: "mild",
+  baseline_bone_pelvic_concern: "watch",
+  preferred_contact: "phone",
+  supporter_confirmed: true,
+  staff_orientation_done: false
 };
 
 const safetyFields = [
@@ -115,6 +142,27 @@ function getSupport(checkin, partnerAuthorised) {
   return { level, score, alerts, colorClass, tags: tags.slice(0, 5) };
 }
 
+function getTrialReadiness(trialSetup) {
+  const eligibilityDone = trialSetup.eligibility_age_confirmed && trialSetup.eligibility_hk_resident && trialSetup.eligibility_smartphone_access;
+  const consentDone = trialSetup.consent_lifestyle_only && trialSetup.consent_data_use && trialSetup.consent_followup && trialSetup.consent_deidentified_export;
+  const baselineDone = trialSetup.baseline_saved;
+  const supporterDone = trialSetup.supporter_confirmed;
+  const orientationDone = trialSetup.staff_orientation_done;
+  const steps = [eligibilityDone, consentDone, baselineDone, supporterDone, orientationDone];
+  const readyCount = steps.filter(Boolean).length;
+
+  return {
+    eligibilityDone,
+    consentDone,
+    baselineDone,
+    supporterDone,
+    orientationDone,
+    readyCount,
+    total: steps.length,
+    ready: readyCount === steps.length
+  };
+}
+
 function buildAccessLog(language) {
   return [
     {
@@ -153,6 +201,7 @@ function App() {
   const [partnerPage, setPartnerPage] = useState("overview");
   const [teamPage, setTeamPage] = useState("queue");
   const [checkin, setCheckin] = useState({ ...defaultCheckin, ...(savedState?.checkin || {}) });
+  const [trialSetup, setTrialSetup] = useState({ ...defaultTrialSetup, ...(savedState?.trialSetup || {}) });
   const [completed, setCompleted] = useState(savedState?.completed || {});
   const [followupStatuses, setFollowupStatuses] = useState(savedState?.followupStatuses || {});
   const [partnerAuthorised, setPartnerAuthorised] = useState(savedState?.partnerAuthorised ?? true);
@@ -184,10 +233,10 @@ function App() {
   useEffect(() => {
     window.localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ language, mode, checkin, completed, followupStatuses, partnerAuthorised, updated_at: new Date().toISOString() })
+      JSON.stringify({ language, mode, checkin, trialSetup, completed, followupStatuses, partnerAuthorised, updated_at: new Date().toISOString() })
     );
     window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-  }, [language, mode, checkin, completed, followupStatuses, partnerAuthorised]);
+  }, [language, mode, checkin, trialSetup, completed, followupStatuses, partnerAuthorised]);
 
   const switchMode = (nextMode) => {
     setMode(nextMode);
@@ -198,6 +247,18 @@ function App() {
     setRecordSaved(false);
     setPartnerSaved(false);
     setCheckin((current) => ({ ...current, [field]: value }));
+  };
+
+  const updateTrialSetup = (field, value) => {
+    setTrialSetup((current) => ({ ...current, [field]: value }));
+  };
+
+  const markPilotReady = () => {
+    setTrialSetup((current) => ({
+      ...current,
+      baseline_saved: true,
+      staff_orientation_done: true
+    }));
   };
 
   const handleSafetyChange = (field, checked) => {
@@ -233,6 +294,10 @@ function App() {
     locale: language,
     service_mode: api.getApiMode(),
     participant: { user_id: defaultUser.user_id, pilot_id: defaultUser.pilot_id, life_stage: defaultUser.life_stage },
+    trial_setup: {
+      ...trialSetup,
+      readiness: getTrialReadiness(trialSetup)
+    },
     today_record: checkin,
     support: { level: support.level, tags: support.tags, alerts: support.alerts },
     completion: completed,
@@ -242,13 +307,18 @@ function App() {
 
   return (
     <div className="app-shell text-slate-950">
-      <header className="sticky top-0 z-30 border-b border-rose-100 bg-white/95 backdrop-blur">
-        <div className="mobile-container flex flex-col gap-3 px-4 py-3">
-          <div>
-            <p className="text-lg font-bold text-teal-700">{text.appName}</p>
-            <h1 className="text-xl font-bold tracking-normal">{text.productLine}</h1>
+      <header className="app-header border-b border-rose-100 bg-white/95 backdrop-blur">
+        <div className="mobile-container px-4 py-3">
+          <div className="brand-row">
+            <div className="brand-mark" aria-hidden="true">
+              <span />
+            </div>
+            <div className="min-w-0">
+              <p className="brand-name text-lg font-bold text-teal-700">{text.appName}</p>
+              <h1 className="brand-line text-xl font-bold tracking-normal">{text.productLine}</h1>
+            </div>
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="mt-3 grid gap-2">
             <ModeSelector mode={mode} modes={text.modes} switchMode={switchMode} />
             <LanguageSelector language={language} setLanguage={setLanguage} />
           </div>
@@ -282,6 +352,15 @@ function App() {
             updateCheckin={updateCheckin}
             handleSafetyChange={handleSafetyChange}
             submitRecord={() => submitRecord("participant")}
+          />
+        )}
+        {mode === "woman" && womanPage === "setup" && (
+          <TrialSetup
+            text={text}
+            language={language}
+            trialSetup={trialSetup}
+            updateTrialSetup={updateTrialSetup}
+            markPilotReady={markPilotReady}
           />
         )}
         {mode === "woman" && womanPage === "weekly" && <WeeklyPage text={text} language={language} support={support} checkin={checkin} completed={completed} />}
@@ -339,20 +418,26 @@ function App() {
 
 function ModeSelector({ mode, modes, switchMode }) {
   return (
-    <label className="block">
-      <span className="sr-only">Mode</span>
-      <select value={mode} onChange={(event) => switchMode(event.target.value)} className="large-tap w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-lg font-bold text-slate-900">
-        {Object.entries(modes).map(([key, label]) => (
-          <option key={key} value={key}>{label}</option>
-        ))}
-      </select>
-    </label>
+    <div className="role-switcher" role="tablist" aria-label="Mode">
+      {Object.entries(modes).map(([key, label]) => (
+        <button
+          key={key}
+          type="button"
+          role="tab"
+          aria-selected={mode === key}
+          onClick={() => switchMode(key)}
+          className={`large-tap role-switcher__item ${mode === key ? "is-active" : ""}`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
   );
 }
 
 function MobileBottomNav({ active, setActive, items }) {
   const entries = Object.entries(items);
-  const gridClass = entries.length > 4 ? "grid-cols-3" : "grid-cols-4";
+  const gridClass = entries.length === 5 ? "grid-cols-5" : entries.length > 4 ? "grid-cols-3" : "grid-cols-4";
   return (
     <nav className="mobile-bottom-nav fixed bottom-0 z-40 border-t border-rose-100 bg-white px-2 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-2 shadow-[0_-12px_30px_rgba(15,23,42,0.10)]">
       <div className={`mx-auto grid ${gridClass} gap-1`}>
@@ -360,13 +445,40 @@ function MobileBottomNav({ active, setActive, items }) {
           <button
             key={key}
             onClick={() => setActive(key)}
-            className={`min-h-[56px] rounded-md border px-1 py-2 text-base font-bold leading-tight ${active === key ? "border-teal-700 bg-teal-700 text-white" : "border-slate-200 bg-white text-slate-800"}`}
+            aria-current={active === key ? "page" : undefined}
+            className={`nav-button ${entries.length === 5 ? "min-h-[52px] text-sm" : "min-h-[56px] text-base"} rounded-md border px-1 py-2 font-bold leading-tight ${active === key ? "border-teal-700 bg-teal-700 text-white" : "border-slate-200 bg-white text-slate-800"}`}
           >
-            {label}
+            <NavIcon id={key} />
+            <span>{label}</span>
           </button>
         ))}
       </div>
     </nav>
+  );
+}
+
+function NavIcon({ id }) {
+  const paths = {
+    home: <path d="M4 11.5 12 5l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-8.5Z" />,
+    setup: <path d="M7 4h10v16H7zM10 8h4M10 12h4M10 16h2M15.5 16l1.2 1.2 2.3-3" />,
+    record: <path d="M7 4h10v16H7zM9.5 8h5M9.5 12h5M9.5 16h3" />,
+    weekly: <path d="M5 19V5M5 19h14M9 15v-4M13 15V8M17 15v-7" />,
+    me: <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM5 20c1.4-3.5 4-5.2 7-5.2s5.6 1.7 7 5.2" />,
+    overview: <path d="M4 6h16M4 12h16M4 18h10" />,
+    assist: <path d="M12 5v14M5 12h14" />,
+    reminders: <path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6ZM10 19h4" />,
+    consent: <path d="M7 4h10v7c0 4-2 7-5 9-3-2-5-5-5-9V4ZM9.5 12l1.7 1.7 3.5-4" />,
+    queue: <path d="M5 6h14M5 12h14M5 18h9" />,
+    cases: <path d="M7 5h10v16H7zM10 9h4M10 13h4M10 17h2" />,
+    safety: <path d="M12 3 21 7v6c0 4-3 7-9 9-6-2-9-5-9-9V7l9-4ZM12 8v5M12 17h.01" />,
+    integration: <path d="M7 8a4 4 0 0 1 4-4h2M17 16a4 4 0 0 1-4 4h-2M8 12h8M5 15l3-3-3-3M19 9l-3 3 3 3" />
+  };
+  return (
+    <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {paths[id] || paths.home}
+      </g>
+    </svg>
   );
 }
 
@@ -383,9 +495,23 @@ function t(language, zhHK, en) {
   return isChineseLanguage(language) ? localizeText(zhHK, language) : en;
 }
 
+function labelActionCategory(category, language) {
+  const labels = {
+    cooling: ["潮熱舒緩", "Cooling"],
+    sleep: ["睡眠節律", "Sleep"],
+    strength: ["骨骼力量", "Strength"],
+    nutrition: ["飲食支持", "Nutrition"],
+    pelvic: ["盆底支持", "Pelvic floor"],
+    mood: ["情緒支持", "Mood"],
+    record: ["身體記錄", "Body log"]
+  };
+  const [zh, en] = labels[category] || labels.record;
+  return t(language, zh, en);
+}
+
 function LanguageSelector({ language, setLanguage }) {
   return (
-    <div className="grid grid-cols-3 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
+    <div className="language-switcher grid grid-cols-3 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
       {LANGUAGES.map((item) => (
         <button
           key={item}
@@ -409,9 +535,10 @@ function WomanHome({ text, language, support, todayState, actionsState, complete
   return (
     <div className="space-y-6">
       <section className="grid gap-4">
-        <div className="hero-card rounded-xl p-6">
-          <p className="text-lg font-bold text-teal-900">{text.home.greeting}</p>
-          <h2 className="mt-2 text-3xl font-bold leading-tight">{text.home.title}</h2>
+        <div className="hero-card hero-card--home rounded-xl p-5">
+          <StageScene variant={showSafety ? "safety" : "home"} />
+          <p className="hero-kicker mt-5 text-lg font-bold text-teal-900">{text.home.greeting}</p>
+          <h2 className="hero-title mt-2 text-3xl font-bold leading-tight">{text.home.title}</h2>
           <p className="mt-3 text-lg leading-8 text-slate-700">{showSafety ? text.home.alertBody : text.home.safeBody}</p>
           <div className={`mt-5 rounded-lg border p-4 ${support.colorClass}`}>
             <p className="text-base font-bold">{todayData.safety_title}</p>
@@ -466,8 +593,11 @@ function ActionCard({ action, text, language, onComplete }) {
   const done = action.status === "completed";
   const altText = language === "zh-CN" ? action.alt_text_zh_cn : isChineseLanguage(language) ? action.alt_text_zh_hk : action.alt_text_en;
   return (
-    <article className="overflow-hidden rounded-lg border border-rose-100 bg-white shadow-sm">
-      <img src={action.image_url} alt={altText} className="h-40 w-full object-cover" />
+    <article className="action-card overflow-hidden rounded-lg border border-rose-100 bg-white shadow-sm">
+      <div className="action-media">
+        <img src={action.image_url} alt={altText} className="action-art w-full object-cover" />
+        <span className="action-duration rounded-full bg-slate-100 px-3 py-2 text-base font-bold text-slate-700">{text.common.minutes(action.estimated_minutes)}</span>
+      </div>
       <div className="p-5">
         <h4 className="text-2xl font-bold leading-tight">{action.title}</h4>
         <p className="mt-3 text-lg leading-8 text-slate-700">{action.short_description}</p>
@@ -475,7 +605,7 @@ function ActionCard({ action, text, language, onComplete }) {
           {text.common.safetyNote}: {action.safety_note}
         </div>
         <div className="mt-4 flex items-center justify-between gap-3">
-          <span className="rounded-full bg-slate-100 px-3 py-2 text-base font-bold text-slate-700">{text.common.minutes(action.estimated_minutes)}</span>
+          <span className="action-tag rounded-full bg-slate-100 px-3 py-2 text-base font-bold text-slate-700">{labelActionCategory(action.category, language)}</span>
           <button onClick={() => onComplete(action.assignment_id)} className={`large-tap rounded-md px-5 py-3 text-lg font-bold ${done ? "bg-emerald-600 text-white" : "bg-teal-700 text-white"}`}>
             {done ? text.common.completed : text.common.markDone}
           </button>
@@ -550,6 +680,108 @@ function RecordForm({ text, language, checkin, updateCheckin, submitLabel, onSub
       </button>
       {saved && <p className="mt-4 rounded-lg bg-emerald-50 p-4 text-lg font-bold text-emerald-900">{success}</p>}
     </section>
+  );
+}
+
+function TrialSetup({ text, language, trialSetup, updateTrialSetup, markPilotReady }) {
+  const readiness = getTrialReadiness(trialSetup);
+  const statusText = readiness.ready
+    ? t(language, "可進入 8 週試點", "Ready for 8-week pilot")
+    : t(language, "仍在入組設定", "Setup still in progress");
+  const consentHint = readiness.consentDone
+    ? t(language, "電子同意已完成，可保存 baseline。", "E-consent is complete. Baseline can be saved.")
+    : t(language, "請先完成全部同意項目，才標記為 trial-ready。", "Complete all consent items before marking trial-ready.");
+
+  return (
+    <div className="space-y-6">
+      <PageTitle
+        title={t(language, "試點入組設定", "Pilot onboarding")}
+        subtitle={t(
+          language,
+          "把篩選、同意、baseline、支持者和服務團隊準備放在同一個流程，讓這個前端更接近可試行版本。",
+          "Screening, consent, baseline, supporter setup, and team readiness are handled in one flow, moving the frontend closer to a trial-ready version."
+        )}
+      />
+
+      <section className={`rounded-lg border p-5 ${readiness.ready ? "border-emerald-300 bg-emerald-50 text-emerald-950" : "border-amber-300 bg-amber-50 text-amber-950"}`}>
+        <p className="text-base font-bold">{t(language, "試點準備狀態", "Pilot readiness")}</p>
+        <h3 className="mt-1 text-3xl font-bold">{statusText}</h3>
+        <p className="mt-2 text-lg leading-8">
+          {readiness.readyCount}/{readiness.total} {t(language, "項已完成", "steps complete")}
+        </p>
+        <div className="mt-4 grid gap-2">
+          <ReadinessRow label={t(language, "篩選條件", "Eligibility")} done={readiness.eligibilityDone} language={language} />
+          <ReadinessRow label={t(language, "電子同意", "E-consent")} done={readiness.consentDone} language={language} />
+          <ReadinessRow label={t(language, "Baseline 已保存", "Baseline saved")} done={readiness.baselineDone} language={language} />
+          <ReadinessRow label={t(language, "支持者已確認", "Supporter confirmed")} done={readiness.supporterDone} language={language} />
+          <ReadinessRow label={t(language, "服務團隊已準備", "Team orientation done")} done={readiness.orientationDone} language={language} />
+        </div>
+      </section>
+
+      <section className="grid gap-4">
+        <MetricCard title={t(language, "試點週數", "Pilot week")} value={`${trialSetup.pilot_week}/8`} detail={t(language, "以 8 週 feasibility pilot 為目標", "For an 8-week feasibility pilot")} />
+        <MetricCard title={t(language, "入組日期", "Enrolment date")} value={trialSetup.enrolment_date} detail={defaultUser.pilot_id} />
+        <MetricCard title={t(language, "下次檢視", "Next review")} value={trialSetup.next_review_date} detail={t(language, "研究團隊每週查看趨勢和安全提示", "Research team reviews trends and alerts weekly")} />
+      </section>
+
+      <section className="card rounded-lg p-6">
+        <h3 className="text-2xl font-bold">{t(language, "1. Eligibility screening", "1. Eligibility screening")}</h3>
+        <div className="mt-4 grid gap-3">
+          <ToggleRow label={t(language, "45 至 65 歲女性", "Woman aged 45 to 65")} checked={trialSetup.eligibility_age_confirmed} onChange={(value) => updateTrialSetup("eligibility_age_confirmed", value)} />
+          <ToggleRow label={t(language, "香港本地生活場景 / 可接受本地化內容", "Hong Kong living context / accepts localised content")} checked={trialSetup.eligibility_hk_resident} onChange={(value) => updateTrialSetup("eligibility_hk_resident", value)} />
+          <ToggleRow label={t(language, "可使用智能手機或手機網頁", "Can use a smartphone or mobile web app")} checked={trialSetup.eligibility_smartphone_access} onChange={(value) => updateTrialSetup("eligibility_smartphone_access", value)} />
+        </div>
+      </section>
+
+      <section className="card rounded-lg p-6">
+        <h3 className="text-2xl font-bold">{t(language, "2. 電子同意和資料使用", "2. E-consent and data use")}</h3>
+        <p className="mt-2 text-lg leading-8 text-slate-700">{consentHint}</p>
+        <div className="mt-4 grid gap-3">
+          <ToggleRow label={t(language, "我明白此 App 只提供生活方式支持，不作診斷或治療建議。", "I understand this app provides lifestyle support only, not diagnosis or treatment advice.")} checked={trialSetup.consent_lifestyle_only} onChange={(value) => updateTrialSetup("consent_lifestyle_only", value)} />
+          <ToggleRow label={t(language, "我同意資料用於服務跟進和試點評估。", "I agree that data may be used for service follow-up and pilot evaluation.")} checked={trialSetup.consent_data_use} onChange={(value) => updateTrialSetup("consent_data_use", value)} />
+          <ToggleRow label={t(language, "如出現安全提示，我同意服務團隊可跟進。", "If a safety alert appears, I agree that the service team may follow up.")} checked={trialSetup.consent_followup} onChange={(value) => updateTrialSetup("consent_followup", value)} />
+          <ToggleRow label={t(language, "我同意匯出去識別化資料供研究分析。", "I agree that de-identified data may be exported for research analysis.")} checked={trialSetup.consent_deidentified_export} onChange={(value) => updateTrialSetup("consent_deidentified_export", value)} />
+        </div>
+      </section>
+
+      <section className="card rounded-lg p-6">
+        <h3 className="text-2xl font-bold">{t(language, "3. Baseline profile", "3. Baseline profile")}</h3>
+        <div className="mt-4 grid gap-4">
+          <SelectField label={t(language, "潮熱負擔", "Hot flash burden")} value={trialSetup.baseline_hot_flash_burden} options={["mild", "moderate", "severe"]} language={language} onChange={(value) => updateTrialSetup("baseline_hot_flash_burden", value)} />
+          <SelectField label={t(language, "睡眠影響", "Sleep impact")} value={trialSetup.baseline_sleep_impact} options={["mild", "moderate", "severe"]} language={language} onChange={(value) => updateTrialSetup("baseline_sleep_impact", value)} />
+          <SelectField label={t(language, "情緒 / 壓力", "Mood / stress")} value={trialSetup.baseline_mood_stress} options={["mild", "moderate", "severe"]} language={language} onChange={(value) => updateTrialSetup("baseline_mood_stress", value)} />
+          <SelectField label={t(language, "骨骼 / 盆底關注", "Bone / pelvic concern")} value={trialSetup.baseline_bone_pelvic_concern} options={["normal", "watch", "high"]} language={language} onChange={(value) => updateTrialSetup("baseline_bone_pelvic_concern", value)} />
+          <SelectField label={t(language, "偏好聯絡方式", "Preferred contact")} value={trialSetup.preferred_contact} options={["phone", "whatsapp", "in_app"]} language={language} onChange={(value) => updateTrialSetup("preferred_contact", value)} />
+        </div>
+        <button onClick={() => updateTrialSetup("baseline_saved", true)} className="large-tap mt-6 rounded-md bg-teal-700 px-6 py-4 text-xl font-bold text-white">
+          {t(language, "保存 baseline", "Save baseline")}
+        </button>
+      </section>
+
+      <section className="card rounded-lg p-6">
+        <h3 className="text-2xl font-bold">{t(language, "4. 試點運行準備", "4. Pilot operations")}</h3>
+        <div className="mt-4 grid gap-3">
+          <ToggleRow label={t(language, "支持者已確認授權範圍", "Supporter scope has been confirmed")} checked={trialSetup.supporter_confirmed} onChange={(value) => updateTrialSetup("supporter_confirmed", value)} />
+          <ToggleRow label={t(language, "服務團隊已完成安全提示處理說明", "Service team completed safety-alert handling orientation")} checked={trialSetup.staff_orientation_done} onChange={(value) => updateTrialSetup("staff_orientation_done", value)} />
+        </div>
+        <button
+          onClick={markPilotReady}
+          disabled={!readiness.consentDone}
+          className={`large-tap mt-6 rounded-md px-6 py-4 text-xl font-bold ${readiness.consentDone ? "bg-slate-900 text-white" : "bg-slate-200 text-slate-500"}`}
+        >
+          {t(language, "標記為 trial-ready", "Mark as trial-ready")}
+        </button>
+      </section>
+    </div>
+  );
+}
+
+function ReadinessRow({ label, done, language }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-md bg-white/75 px-3 py-2 text-base font-bold">
+      <span>{label}</span>
+      <span>{done ? t(language, "完成", "Done") : t(language, "待完成", "Pending")}</span>
+    </div>
   );
 }
 
@@ -929,7 +1161,12 @@ function IntegrationCenter({ text, overview }) {
 function DemoMode({ text, language, support, exportPayload }) {
   return (
     <div className="space-y-6">
-      <PageTitle title={text.demo.title} subtitle={text.demo.subtitle} />
+      <section className="hero-card demo-hero rounded-xl p-5">
+        <StageScene variant="demo" />
+        <p className="hero-kicker mt-5 text-lg font-bold text-teal-900">{text.appName}</p>
+        <h2 className="hero-title mt-2 text-3xl font-bold leading-tight">{text.demo.title}</h2>
+        <p className="mt-3 text-lg leading-8 text-slate-700">{text.demo.subtitle}</p>
+      </section>
       <section className="grid gap-4">
         <ListPanel title={text.demo.loopTitle} items={text.demo.loopItems} />
         <ListPanel title={text.demo.boundariesTitle} items={text.demo.boundaries} tone="green" />
@@ -965,13 +1202,29 @@ function SafetyPanel({ text }) {
   );
 }
 
+const stagePhotoByVariant = {
+  home: "/hero-photos/livanudge-home-community.png",
+  safety: "/hero-photos/livanudge-home-community.png",
+  demo: "/hero-photos/livanudge-home-community.png"
+};
+
+function StageScene({ variant = "home" }) {
+  const photoSrc = stagePhotoByVariant[variant] || stagePhotoByVariant.home;
+
+  return (
+    <div className={`stage-scene stage-scene--${variant}`} aria-hidden="true">
+      <img className="stage-scene__image" src={photoSrc} alt="" />
+    </div>
+  );
+}
+
 function LoadingCard({ text }) {
   return <div className="card rounded-lg p-6 text-xl font-bold">{text.common.loading}</div>;
 }
 
 function PageTitle({ title, subtitle }) {
   return (
-    <div>
+    <div className="page-title">
       <h2 className="text-3xl font-bold">{title}</h2>
       <p className="mt-3 max-w-4xl text-lg leading-8 text-slate-700">{subtitle}</p>
     </div>

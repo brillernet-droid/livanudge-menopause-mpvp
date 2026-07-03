@@ -1,29 +1,46 @@
 # LivaNudge Menopause Pilot
 
-面向更年期及绝经后女性的手机优先试点原型。这个版本从原来的泛老年健康方向拆出，聚焦女性在围绝经期和绝经后早期常见的生活方式困扰：潮热、夜汗、睡眠、情绪压力、精力、盆底困扰、关节/肌肉不适和骨骼健康。
+Mobile-first sandbox prototype for menopause lifestyle support. LivaNudge focuses on low-burden daily actions for common menopause-related lifestyle concerns, including hot flashes, night sweats, sleep rhythm, mood and stress, energy, pelvic floor concerns, joint or muscle discomfort, and bone health.
 
-## 当前版本
+This repository is an open-source frontend prototype. It is not a medical device, not a diagnostic tool, and not a production clinical system.
 
-- 自我照护：今日状态、舒缓小行动、每日记录、周报、隐私和授权。
-- 支持者：授权后查看今日状态、协助记录、提醒和授权管理。
-- 试点工作台：跟进队列、个案摘要、安全提示、完成情况、资料导出和接口接入中心。
-- 试点展示：展示产品闭环、智能生成边界、试点指标和研究资料导出。
+## Current Scope
 
-## 安全边界
+- Participant self-care: daily status, relief actions, daily records, weekly feedback, privacy, and authorisation.
+- Pilot onboarding: eligibility, e-consent, baseline profile, supporter setup, and trial-readiness status.
+- Supporter view: authorised overview, assisted record submission, reminders, and consent status.
+- Pilot desk: follow-up queue, case summaries, safety alerts, progress, de-identified data export, and integration status.
+- Pilot demo: product loop, AI-generation boundaries, pilot metrics, and research export preview.
 
-LivaNudge 只做生活方式支持，不做疾病诊断、药物建议或荷尔蒙治疗建议。出现绝经后阴道出血、大量出血、胸痛、明显气促、突然严重头痛/一侧无力或自伤想法时，系统会暂停普通建议，并提示先联系医护、可信任的人或紧急服务。
+## Safety Boundary
 
-## 本地运行
+LivaNudge provides lifestyle support only. It does not diagnose disease, recommend medication, or provide hormone therapy advice. When red-flag symptoms are entered, ordinary lifestyle suggestions are paused and the participant is prompted to seek help from a clinician, trusted person, or emergency service as appropriate.
+
+## Local Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-## 构建
+## Build
 
 ```bash
 npm run build
 ```
 
-构建产物在 `dist/`。
+The production build is generated in `dist/`.
+
+## Deployment
+
+The app is a Vite frontend. Recommended Vercel settings:
+
+- Framework: Vite
+- Build command: `npm run build`
+- Output directory: `dist`
+
+`vercel.json` includes a single-page app rewrite to `index.html`.
+
+## Current Limitations
+
+This is currently a sandbox-ready trial workflow prototype. A complete trial web app still needs backend APIs, database persistence, real authentication, role-based access, versioned consent records, AI nudge audit logs, notification delivery, and privacy/security review before any real participant data is collected.

@@ -15,30 +15,102 @@ function today() {
 }
 
 function sceneDataUri(kind) {
-  const palettes = {
-    cooling: ["#e0f2fe", "#0f766e", "#fff7ed", "#fb7185"],
-    sleep: ["#eef2ff", "#4338ca", "#fff1f2", "#0f766e"],
-    strength: ["#ecfdf5", "#047857", "#fef3c7", "#c2410c"],
-    nutrition: ["#fefce8", "#a16207", "#dcfce7", "#0f766e"],
-    pelvic: ["#fdf2f8", "#be185d", "#ecfeff", "#0f766e"],
-    mood: ["#f0fdfa", "#0f766e", "#ffe4e6", "#be123c"],
-    record: ["#f8fafc", "#475569", "#ecfeff", "#0f766e"]
+  const settings = {
+    cooling: { bg: "#fff1f2", wash: "#e7f5ef", main: "#4b245f", accent: "#c86b5b", icon: "cooling" },
+    sleep: { bg: "#f5f0fa", wash: "#e8f3f0", main: "#3b2553", accent: "#8b5e87", icon: "sleep" },
+    strength: { bg: "#edf8f2", wash: "#fff2ed", main: "#3f7769", accent: "#b75c6b", icon: "strength" },
+    nutrition: { bg: "#fff7e8", wash: "#e8f5ef", main: "#6d5428", accent: "#3f7769", icon: "nutrition" },
+    pelvic: { bg: "#fff1f7", wash: "#edf8f5", main: "#7a3159", accent: "#8b5e87", icon: "pelvic" },
+    mood: { bg: "#f3f8f5", wash: "#fff1f2", main: "#4b245f", accent: "#3f7769", icon: "mood" },
+    record: { bg: "#f8f5fb", wash: "#fff1f2", main: "#4b245f", accent: "#3f7769", icon: "record" }
   };
-  const [bg, main, light, accent] = palettes[kind] || palettes.cooling;
+  const { bg, wash, main, accent, icon } = settings[kind] || settings.cooling;
+  const iconMarkup = {
+    cooling: `
+      <path d="M206 236c20-45 53-68 98-68 44 0 77 23 98 68-50 24-146 24-196 0z" fill="#fffdfb" stroke="${main}" stroke-width="8"/>
+      <path d="M238 212c20-18 39-18 59 0 20 17 41 17 63-1" stroke="${accent}" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <path d="M416 128c42 18 64 48 65 90" stroke="${main}" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <path d="M416 128c22 35 22 70 0 105" stroke="${main}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.7"/>
+      <path d="M416 128c-9 37-35 63-78 79" stroke="${main}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.55"/>
+    `,
+    sleep: `
+      <rect x="168" y="152" width="192" height="82" rx="30" fill="#fffdfb" stroke="${main}" stroke-width="8"/>
+      <path d="M194 184h137" stroke="${accent}" stroke-width="10" stroke-linecap="round" opacity="0.82"/>
+      <path d="M398 102c-26 47 3 101 54 112-19 19-47 28-76 21-42-10-69-52-59-95 7-31 31-55 63-64-1 10 5 20 18 26z" fill="${main}" opacity="0.9"/>
+      <path d="M172 254c44 22 95 22 154 0 58-22 105-20 140 4" stroke="${accent}" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.52"/>
+    `,
+    strength: `
+      <path d="M184 238c24-40 59-60 104-60 44 0 79 20 104 60" fill="#fffdfb" stroke="${main}" stroke-width="8"/>
+      <circle cx="288" cy="128" r="25" fill="${accent}"/>
+      <path d="M288 154v66M244 188h88" stroke="${main}" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <path d="M414 128h70v84h-94M420 212v48M482 212v48" stroke="${main}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.78"/>
+      <path d="M206 260c62 28 128 28 198 0" stroke="${accent}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.58"/>
+    `,
+    nutrition: `
+      <path d="M172 216c25 53 184 53 209 0H172z" fill="#fffdfb" stroke="${main}" stroke-width="8"/>
+      <path d="M202 194c50-27 101-27 151 0" stroke="${accent}" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <path d="M414 116c40 35 35 91-11 124-31-43-27-88 11-124z" fill="${wash}" stroke="${main}" stroke-width="7"/>
+      <path d="M442 126c45 5 73 43 66 86-45-4-74-36-66-86z" fill="#fffdfb" stroke="${accent}" stroke-width="7"/>
+      <path d="M238 176c10-22 29-34 56-34" stroke="${main}" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.52"/>
+    `,
+    pelvic: `
+      <path d="M214 116c28 34 37 75 27 124" stroke="${main}" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <path d="M330 116c-28 34-37 75-27 124" stroke="${main}" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <path d="M238 239c24-29 49-44 76-44s52 15 76 44" stroke="${accent}" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <path d="M198 265c76 25 154 25 232 0" stroke="${main}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.2"/>
+      <path d="M426 132c34 27 43 67 26 119-51-23-61-63-26-119z" fill="${wash}" stroke="${main}" stroke-width="7"/>
+    `,
+    mood: `
+      <rect x="172" y="106" width="176" height="150" rx="26" fill="#fffdfb" stroke="${main}" stroke-width="8"/>
+      <path d="M202 148h96M202 184h114M202 220h74" stroke="${accent}" stroke-width="9" stroke-linecap="round"/>
+      <path d="M414 116c40 6 72 35 79 75-42 3-80-16-101-52 6-9 13-17 22-23z" fill="${wash}" stroke="${main}" stroke-width="7"/>
+      <path d="M410 224c25 28 66 30 97 5" stroke="${accent}" stroke-width="9" stroke-linecap="round" fill="none"/>
+    `,
+    record: `
+      <rect x="178" y="94" width="188" height="174" rx="26" fill="#fffdfb" stroke="${main}" stroke-width="8"/>
+      <path d="M218 144h100M218 184h100M218 224h66" stroke="${accent}" stroke-width="9" stroke-linecap="round"/>
+      <path d="M404 132h70M404 180h70M404 228h70" stroke="${main}" stroke-width="8" stroke-linecap="round" opacity="0.7"/>
+      <path d="M392 132l13 13 25-31M392 228l13 13 25-31" stroke="${accent}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M456 180h.01" stroke="${accent}" stroke-width="16" stroke-linecap="round"/>
+    `
+  }[icon];
   const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img">
-      <rect width="640" height="360" fill="${bg}"/>
-      <circle cx="126" cy="112" r="64" fill="${light}"/>
-      <circle cx="510" cy="236" r="82" fill="#ffffff" opacity="0.72"/>
-      <path d="M74 270c76-82 154-82 236 0s160 82 256-2" fill="none" stroke="${accent}" stroke-width="22" stroke-linecap="round" opacity="0.55"/>
-      <rect x="236" y="78" width="168" height="210" rx="36" fill="#ffffff" opacity="0.92"/>
-      <path d="M286 150c16-24 52-24 68 0 12 18 8 44-34 78-42-34-46-60-34-78z" fill="${main}" opacity="0.88"/>
-      <path d="M252 118h136M252 260h136" stroke="${main}" stroke-width="14" stroke-linecap="round" opacity="0.3"/>
-      <circle cx="458" cy="118" r="32" fill="${accent}" opacity="0.75"/>
-      <path d="M458 164v74M426 202h64" stroke="${accent}" stroke-width="18" stroke-linecap="round"/>
+    <svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-label="Menopause wellbeing action illustration">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="${bg}"/>
+          <stop offset="0.58" stop-color="#fffdfb"/>
+          <stop offset="1" stop-color="${wash}"/>
+        </linearGradient>
+        <linearGradient id="curtain" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="${accent}" stop-opacity="0.72"/>
+          <stop offset="1" stop-color="${main}" stop-opacity="0.62"/>
+        </linearGradient>
+      </defs>
+      <rect width="640" height="360" rx="0" fill="url(#bg)"/>
+      <path d="M0 0h190L114 360H0z" fill="#ffffff" opacity="0.24"/>
+      <path d="M440 0h200v360H520z" fill="#ffffff" opacity="0.2"/>
+      <path d="M28 0c42 71 58 140 48 206-7 49-2 100 18 154H0V0z" fill="url(#curtain)" opacity="0.16"/>
+      <path d="M612 0c-42 71-58 140-48 206 7 49 2 100-18 154h94V0z" fill="url(#curtain)" opacity="0.14"/>
+      <path d="M0 286c73-26 143-31 210-15 77 18 134 13 207-21 68-31 143-34 223-8v118H0z" fill="#fffdfb" opacity="0.72"/>
+      <path d="M58 72c78-36 162-35 252 5 92 42 179 41 272-8" stroke="#ffffff" stroke-width="14" stroke-linecap="round" opacity="0.64"/>
+      <path d="M84 306c113 22 282 20 472-5" stroke="${main}" stroke-width="6" stroke-linecap="round" opacity="0.14"/>
+      <g transform="translate(0 0)">
+        ${iconMarkup}
+      </g>
     </svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
+
+const actionImageUrls = {
+  cooling: "/action-photos/hongkong-cooling-rest.png",
+  sleep: "/action-photos/hongkong-sleep-winddown.png",
+  strength: "/action-photos/hongkong-gentle-strength.png",
+  nutrition: "/action-photos/hongkong-kitchen-nutrition.png",
+  pelvic: "/action-photos/hongkong-private-care.png",
+  mood: "/action-photos/hongkong-mood-journal.png",
+  record: "/action-photos/hongkong-symptom-note.png"
+};
 
 const actionLibrary = {
   cooling_breath: {
@@ -184,7 +256,7 @@ function actionPayload(key, locale, index, completed) {
     reason: copy.reason,
     status: completed[id] ? "completed" : "assigned",
     image_status: "approved",
-    image_url: sceneDataUri(source.imageKind),
+    image_url: actionImageUrls[source.imageKind] || sceneDataUri(source.imageKind),
     alt_text_zh_hk: source.zh.title,
     alt_text_zh_cn: localizeText(source.zh.title, ZH_CN),
     alt_text_en: source.en.title
@@ -390,6 +462,8 @@ export function getIntegrationOverview({ locale }) {
         ],
     gaps: [
       isZh(locale) ? zhText(locale, "正式登入與授權流程") : "Production login and consent flow",
+      isZh(locale) ? zhText(locale, "後端 API、資料庫和角色權限") : "Backend API, database, and role-based access",
+      isZh(locale) ? zhText(locale, "AI 小行動生成服務與審計紀錄") : "AI nudge service and audit logs",
       isZh(locale) ? zhText(locale, "婦科或家庭醫生轉介備註欄") : "Women's health or family doctor referral notes",
       isZh(locale) ? zhText(locale, "圖片人工審核後台") : "Manual image review console"
     ]
