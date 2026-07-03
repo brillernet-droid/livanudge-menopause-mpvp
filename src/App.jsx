@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   LANGUAGES,
   LANGUAGE_STORAGE_KEY,
+  ZH_CN,
   getCopy,
   getInitialLanguage,
   isChineseLanguage,
@@ -491,22 +492,23 @@ function mobileTeamNav(items) {
   };
 }
 
-function t(language, zhHK, en) {
-  return isChineseLanguage(language) ? localizeText(zhHK, language) : en;
+function t(language, zhHK, en, zhCN = zhHK) {
+  if (language === ZH_CN) return localizeText(zhCN, language);
+  return isChineseLanguage(language) ? zhHK : en;
 }
 
 function labelActionCategory(category, language) {
   const labels = {
-    cooling: ["潮熱舒緩", "Cooling"],
+    cooling: ["潮熱舒緩", "Cooling", "潮热舒缓"],
     sleep: ["睡眠節律", "Sleep"],
     strength: ["骨骼力量", "Strength"],
-    nutrition: ["飲食支持", "Nutrition"],
-    pelvic: ["盆底支持", "Pelvic floor"],
+    nutrition: ["飲食支援", "Nutrition", "饮食支持"],
+    pelvic: ["盆底支援", "Pelvic floor", "盆底支持"],
     mood: ["情緒支持", "Mood"],
     record: ["身體記錄", "Body log"]
   };
-  const [zh, en] = labels[category] || labels.record;
-  return t(language, zh, en);
+  const [zhHK, en, zhCN] = labels[category] || labels.record;
+  return t(language, zhHK, en, zhCN);
 }
 
 function LanguageSelector({ language, setLanguage }) {
@@ -686,61 +688,62 @@ function RecordForm({ text, language, checkin, updateCheckin, submitLabel, onSub
 function TrialSetup({ text, language, trialSetup, updateTrialSetup, markPilotReady }) {
   const readiness = getTrialReadiness(trialSetup);
   const statusText = readiness.ready
-    ? t(language, "可進入 8 週試點", "Ready for 8-week pilot")
-    : t(language, "仍在入組設定", "Setup still in progress");
+    ? t(language, "可以開始 8 週試點", "Ready for 8-week pilot", "可进入 8 周试点")
+    : t(language, "入組設定未完成", "Setup still in progress", "仍在入组设置");
   const consentHint = readiness.consentDone
-    ? t(language, "電子同意已完成，可保存 baseline。", "E-consent is complete. Baseline can be saved.")
-    : t(language, "請先完成全部同意項目，才標記為 trial-ready。", "Complete all consent items before marking trial-ready.");
+    ? t(language, "電子同意已完成，可以儲存 baseline。", "E-consent is complete. Baseline can be saved.", "电子同意已完成，可保存 baseline。")
+    : t(language, "請先完成所有同意項目，先可以標記為 trial-ready。", "Complete all consent items before marking trial-ready.", "请先完成全部同意项目，才标记为 trial-ready。");
 
   return (
     <div className="space-y-6">
       <PageTitle
-        title={t(language, "試點入組設定", "Pilot onboarding")}
+        title={t(language, "試點入組設定", "Pilot onboarding", "试点入组设置")}
         subtitle={t(
           language,
-          "把篩選、同意、baseline、支持者和服務團隊準備放在同一個流程，讓這個前端更接近可試行版本。",
-          "Screening, consent, baseline, supporter setup, and team readiness are handled in one flow, moving the frontend closer to a trial-ready version."
+          "將篩選、同意、baseline、支援者同服務團隊準備放喺同一個流程，令呢個前端更接近可以試行嘅版本。",
+          "Screening, consent, baseline, supporter setup, and team readiness are handled in one flow, moving the frontend closer to a trial-ready version.",
+          "把筛选、同意、baseline、支持者和服务团队准备放在同一个流程，让这个前端更接近可试行版本。"
         )}
       />
 
       <section className={`rounded-lg border p-5 ${readiness.ready ? "border-emerald-300 bg-emerald-50 text-emerald-950" : "border-amber-300 bg-amber-50 text-amber-950"}`}>
-        <p className="text-base font-bold">{t(language, "試點準備狀態", "Pilot readiness")}</p>
+        <p className="text-base font-bold">{t(language, "試點準備狀態", "Pilot readiness", "试点准备状态")}</p>
         <h3 className="mt-1 text-3xl font-bold">{statusText}</h3>
         <p className="mt-2 text-lg leading-8">
-          {readiness.readyCount}/{readiness.total} {t(language, "項已完成", "steps complete")}
+          {readiness.readyCount}/{readiness.total} {t(language, "項已完成", "steps complete", "项已完成")}
         </p>
         <div className="mt-4 grid gap-2">
-          <ReadinessRow label={t(language, "篩選條件", "Eligibility")} done={readiness.eligibilityDone} language={language} />
+          <ReadinessRow label={t(language, "篩選條件", "Eligibility", "筛选条件")} done={readiness.eligibilityDone} language={language} />
           <ReadinessRow label={t(language, "電子同意", "E-consent")} done={readiness.consentDone} language={language} />
-          <ReadinessRow label={t(language, "Baseline 已保存", "Baseline saved")} done={readiness.baselineDone} language={language} />
-          <ReadinessRow label={t(language, "支持者已確認", "Supporter confirmed")} done={readiness.supporterDone} language={language} />
-          <ReadinessRow label={t(language, "服務團隊已準備", "Team orientation done")} done={readiness.orientationDone} language={language} />
+          <ReadinessRow label={t(language, "Baseline 已儲存", "Baseline saved", "Baseline 已保存")} done={readiness.baselineDone} language={language} />
+          <ReadinessRow label={t(language, "支援者已確認", "Supporter confirmed", "支持者已确认")} done={readiness.supporterDone} language={language} />
+          <ReadinessRow label={t(language, "服務團隊已準備", "Team orientation done", "服务团队已准备")} done={readiness.orientationDone} language={language} />
         </div>
       </section>
 
       <section className="grid gap-4">
-        <MetricCard title={t(language, "試點週數", "Pilot week")} value={`${trialSetup.pilot_week}/8`} detail={t(language, "以 8 週 feasibility pilot 為目標", "For an 8-week feasibility pilot")} />
-        <MetricCard title={t(language, "入組日期", "Enrolment date")} value={trialSetup.enrolment_date} detail={defaultUser.pilot_id} />
-        <MetricCard title={t(language, "下次檢視", "Next review")} value={trialSetup.next_review_date} detail={t(language, "研究團隊每週查看趨勢和安全提示", "Research team reviews trends and alerts weekly")} />
+        <MetricCard title={t(language, "試點週數", "Pilot week", "试点周数")} value={`${trialSetup.pilot_week}/8`} detail={t(language, "目標係 8 週 feasibility pilot", "For an 8-week feasibility pilot", "以 8 周 feasibility pilot 为目标")} />
+        <MetricCard title={t(language, "入組日期", "Enrolment date", "入组日期")} value={trialSetup.enrolment_date} detail={defaultUser.pilot_id} />
+        <MetricCard title={t(language, "下次檢視", "Next review", "下次查看")} value={trialSetup.next_review_date} detail={t(language, "研究團隊每週睇趨勢同安全提示", "Research team reviews trends and alerts weekly", "研究团队每周查看趋势和安全提示")} />
       </section>
 
       <section className="card rounded-lg p-6">
         <h3 className="text-2xl font-bold">{t(language, "1. Eligibility screening", "1. Eligibility screening")}</h3>
         <div className="mt-4 grid gap-3">
           <ToggleRow label={t(language, "45 至 65 歲女性", "Woman aged 45 to 65")} checked={trialSetup.eligibility_age_confirmed} onChange={(value) => updateTrialSetup("eligibility_age_confirmed", value)} />
-          <ToggleRow label={t(language, "香港本地生活場景 / 可接受本地化內容", "Hong Kong living context / accepts localised content")} checked={trialSetup.eligibility_hk_resident} onChange={(value) => updateTrialSetup("eligibility_hk_resident", value)} />
-          <ToggleRow label={t(language, "可使用智能手機或手機網頁", "Can use a smartphone or mobile web app")} checked={trialSetup.eligibility_smartphone_access} onChange={(value) => updateTrialSetup("eligibility_smartphone_access", value)} />
+          <ToggleRow label={t(language, "香港本地生活場景 / 接受本地化內容", "Hong Kong living context / accepts localised content", "香港本地生活场景 / 可接受本地化内容")} checked={trialSetup.eligibility_hk_resident} onChange={(value) => updateTrialSetup("eligibility_hk_resident", value)} />
+          <ToggleRow label={t(language, "識用智能手機或者手機網頁", "Can use a smartphone or mobile web app", "可使用智能手机或手机网页")} checked={trialSetup.eligibility_smartphone_access} onChange={(value) => updateTrialSetup("eligibility_smartphone_access", value)} />
         </div>
       </section>
 
       <section className="card rounded-lg p-6">
-        <h3 className="text-2xl font-bold">{t(language, "2. 電子同意和資料使用", "2. E-consent and data use")}</h3>
+        <h3 className="text-2xl font-bold">{t(language, "2. 電子同意同資料使用", "2. E-consent and data use", "2. 电子同意和数据使用")}</h3>
         <p className="mt-2 text-lg leading-8 text-slate-700">{consentHint}</p>
         <div className="mt-4 grid gap-3">
-          <ToggleRow label={t(language, "我明白此 App 只提供生活方式支持，不作診斷或治療建議。", "I understand this app provides lifestyle support only, not diagnosis or treatment advice.")} checked={trialSetup.consent_lifestyle_only} onChange={(value) => updateTrialSetup("consent_lifestyle_only", value)} />
-          <ToggleRow label={t(language, "我同意資料用於服務跟進和試點評估。", "I agree that data may be used for service follow-up and pilot evaluation.")} checked={trialSetup.consent_data_use} onChange={(value) => updateTrialSetup("consent_data_use", value)} />
-          <ToggleRow label={t(language, "如出現安全提示，我同意服務團隊可跟進。", "If a safety alert appears, I agree that the service team may follow up.")} checked={trialSetup.consent_followup} onChange={(value) => updateTrialSetup("consent_followup", value)} />
-          <ToggleRow label={t(language, "我同意匯出去識別化資料供研究分析。", "I agree that de-identified data may be exported for research analysis.")} checked={trialSetup.consent_deidentified_export} onChange={(value) => updateTrialSetup("consent_deidentified_export", value)} />
+          <ToggleRow label={t(language, "我明白呢個 App 只提供生活方式支援，唔係診斷或者治療建議。", "I understand this app provides lifestyle support only, not diagnosis or treatment advice.", "我明白此 App 只提供生活方式支持，不作诊断或治疗建议。")} checked={trialSetup.consent_lifestyle_only} onChange={(value) => updateTrialSetup("consent_lifestyle_only", value)} />
+          <ToggleRow label={t(language, "我同意資料用於服務跟進同試點評估。", "I agree that data may be used for service follow-up and pilot evaluation.", "我同意数据用于服务跟进和试点评估。")} checked={trialSetup.consent_data_use} onChange={(value) => updateTrialSetup("consent_data_use", value)} />
+          <ToggleRow label={t(language, "如果出現安全提示，我同意服務團隊可以跟進。", "If a safety alert appears, I agree that the service team may follow up.", "如出现安全提示，我同意服务团队可跟进。")} checked={trialSetup.consent_followup} onChange={(value) => updateTrialSetup("consent_followup", value)} />
+          <ToggleRow label={t(language, "我同意匯出去識別化資料作研究分析。", "I agree that de-identified data may be exported for research analysis.", "我同意导出去识别化数据供研究分析。")} checked={trialSetup.consent_deidentified_export} onChange={(value) => updateTrialSetup("consent_deidentified_export", value)} />
         </div>
       </section>
 
@@ -750,26 +753,26 @@ function TrialSetup({ text, language, trialSetup, updateTrialSetup, markPilotRea
           <SelectField label={t(language, "潮熱負擔", "Hot flash burden")} value={trialSetup.baseline_hot_flash_burden} options={["mild", "moderate", "severe"]} language={language} onChange={(value) => updateTrialSetup("baseline_hot_flash_burden", value)} />
           <SelectField label={t(language, "睡眠影響", "Sleep impact")} value={trialSetup.baseline_sleep_impact} options={["mild", "moderate", "severe"]} language={language} onChange={(value) => updateTrialSetup("baseline_sleep_impact", value)} />
           <SelectField label={t(language, "情緒 / 壓力", "Mood / stress")} value={trialSetup.baseline_mood_stress} options={["mild", "moderate", "severe"]} language={language} onChange={(value) => updateTrialSetup("baseline_mood_stress", value)} />
-          <SelectField label={t(language, "骨骼 / 盆底關注", "Bone / pelvic concern")} value={trialSetup.baseline_bone_pelvic_concern} options={["normal", "watch", "high"]} language={language} onChange={(value) => updateTrialSetup("baseline_bone_pelvic_concern", value)} />
+          <SelectField label={t(language, "骨骼 / 盆底關注", "Bone / pelvic concern", "骨骼 / 盆底关注")} value={trialSetup.baseline_bone_pelvic_concern} options={["normal", "watch", "high"]} language={language} onChange={(value) => updateTrialSetup("baseline_bone_pelvic_concern", value)} />
           <SelectField label={t(language, "偏好聯絡方式", "Preferred contact")} value={trialSetup.preferred_contact} options={["phone", "whatsapp", "in_app"]} language={language} onChange={(value) => updateTrialSetup("preferred_contact", value)} />
         </div>
         <button onClick={() => updateTrialSetup("baseline_saved", true)} className="large-tap mt-6 rounded-md bg-teal-700 px-6 py-4 text-xl font-bold text-white">
-          {t(language, "保存 baseline", "Save baseline")}
+          {t(language, "儲存 baseline", "Save baseline", "保存 baseline")}
         </button>
       </section>
 
       <section className="card rounded-lg p-6">
-        <h3 className="text-2xl font-bold">{t(language, "4. 試點運行準備", "4. Pilot operations")}</h3>
+        <h3 className="text-2xl font-bold">{t(language, "4. 試點運作準備", "4. Pilot operations", "4. 试点运行准备")}</h3>
         <div className="mt-4 grid gap-3">
-          <ToggleRow label={t(language, "支持者已確認授權範圍", "Supporter scope has been confirmed")} checked={trialSetup.supporter_confirmed} onChange={(value) => updateTrialSetup("supporter_confirmed", value)} />
-          <ToggleRow label={t(language, "服務團隊已完成安全提示處理說明", "Service team completed safety-alert handling orientation")} checked={trialSetup.staff_orientation_done} onChange={(value) => updateTrialSetup("staff_orientation_done", value)} />
+          <ToggleRow label={t(language, "支援者已確認授權範圍", "Supporter scope has been confirmed", "支持者已确认授权范围")} checked={trialSetup.supporter_confirmed} onChange={(value) => updateTrialSetup("supporter_confirmed", value)} />
+          <ToggleRow label={t(language, "服務團隊已完成安全提示處理說明", "Service team completed safety-alert handling orientation", "服务团队已完成安全提示处理说明")} checked={trialSetup.staff_orientation_done} onChange={(value) => updateTrialSetup("staff_orientation_done", value)} />
         </div>
         <button
           onClick={markPilotReady}
           disabled={!readiness.consentDone}
           className={`large-tap mt-6 rounded-md px-6 py-4 text-xl font-bold ${readiness.consentDone ? "bg-slate-900 text-white" : "bg-slate-200 text-slate-500"}`}
         >
-          {t(language, "標記為 trial-ready", "Mark as trial-ready")}
+          {t(language, "標記為 trial-ready", "Mark as trial-ready", "标记为 trial-ready")}
         </button>
       </section>
     </div>
@@ -794,7 +797,7 @@ function WeeklyPage({ text, language, support, checkin, completed }) {
       <section className="grid gap-4">
         <MetricCard title={text.weekly.checkins} value="5" detail={text.common.sevenDays} />
         <MetricCard title={text.weekly.actions} value={`${done}/3`} detail={text.common.thisWeek} />
-        <MetricCard title={text.weekly.hotFlashes} value={String(Number(checkin.hot_flashes) + 8)} detail={t(language, "近7天估算", "Estimated in 7 days")} />
+        <MetricCard title={text.weekly.hotFlashes} value={String(Number(checkin.hot_flashes) + 8)} detail={t(language, "近7日估算", "Estimated in 7 days", "近7天估算")} />
         <MetricCard title={text.weekly.sleep} value={String(((Number(checkin.sleep_hours) + 6 + 6.5 + 7 + 5.5) / 5).toFixed(1))} detail={isChineseLanguage(language) ? localizeText("小時", language) : "hours"} />
         <MetricCard title={text.weekly.energy} value={`${checkin.energy_level}/5`} detail={text.record.energy} />
       </section>
@@ -878,21 +881,21 @@ function PartnerDesk({ text, language, page, setPage, support, checkin, complete
       <section className="grid gap-4">
         <MobileAnswerCard
           tone="teal"
-          question={t(language, "今日有沒有記錄？", "Has she recorded today?")}
+          question={t(language, "今日有冇記錄？", "Has she recorded today?", "今天有没有记录？")}
           title={t(language, "今日狀態", "Today status")}
-          body={`${isChineseLanguage(language) ? localizeText("已記錄", language) : "Recorded"} · ${labelUser(defaultUser.name, language)} · ${today}`}
+          body={`${language === ZH_CN ? "已记录" : isChineseLanguage(language) ? "已記錄" : "Recorded"} · ${labelUser(defaultUser.name, language)} · ${today}`}
         />
         <MobileAnswerCard
           tone={hasSafety ? "red" : "green"}
-          question={t(language, "有沒有需要先處理的提示？", "Any priority alert?")}
+          question={t(language, "有冇需要先處理嘅提示？", "Any priority alert?", "有没有需要先处理的提示？")}
           title={text.safety.title}
-          body={support.alerts.length ? `${labelSupport("safety", language)} · ${joinLabels(support.alerts, language, labelSafety)}` : t(language, "今日沒有安全提示，可以按平日方式支持。", "No safety alert today. Offer ordinary support.")}
+          body={support.alerts.length ? `${labelSupport("safety", language)} · ${joinLabels(support.alerts, language, labelSafety)}` : t(language, "今日冇安全提示，可以按平日方式支援。", "No safety alert today. Offer ordinary support.", "今日没有安全提示，可以按平日方式支持。")}
         />
         <MobileAnswerCard
           tone={hasSafety ? "red" : "teal"}
-          question={t(language, "我可以怎樣幫？", "How can I help?")}
+          question={t(language, "我可以點樣幫？", "How can I help?", "我可以怎样帮？")}
           title={text.partner.assistedLabel}
-          body={hasSafety ? `${t(language, "先關心和陪同求助", "Check in and help seek care first")} · ${text.home.alertBody}` : text.partner.assistBody}
+          body={hasSafety ? `${t(language, "先關心同陪佢求助", "Check in and help seek care first", "先关心和陪同求助")} · ${text.home.alertBody}` : text.partner.assistBody}
           actionLabel={text.partner.assistedLabel}
           onAction={() => setPage("assist")}
         />
@@ -900,7 +903,7 @@ function PartnerDesk({ text, language, page, setPage, support, checkin, complete
           tone="green"
           question={text.common.sevenDays}
           title={t(language, "最近 7 天", "Last 7 days")}
-          body={t(language, `近7天有 5 天完成記錄，今日舒緩小行動完成 ${done}/3 個。`, `Records were completed on 5 of the last 7 days. Today's actions: ${done}/3.`)}
+          body={t(language, `近7日有 5 日完成記錄，今日舒緩小行動完成 ${done}/3 個。`, `Records were completed on 5 of the last 7 days. Today's actions: ${done}/3.`, `近7天有 5 天完成记录，今日舒缓小行动完成 ${done}/3 个。`)}
         />
       </section>
     </div>
@@ -941,9 +944,11 @@ function AuthorisationGate({ text, setAuthorised }) {
 }
 
 function PartnerReminders({ text, language }) {
-  const rows = isChineseLanguage(language)
-    ? ["每日晚上提醒完成症狀記錄", "如出現安全提示，立即通知支持者", "每週一早上發送簡短週報"].map((item) => localizeText(item, language))
-    : ["Evening reminder for symptom check-in", "Notify supporter immediately when a safety alert appears", "Send a simple weekly summary every Monday morning"];
+  const rows = language === ZH_CN
+    ? ["每日晚上提醒完成症状记录", "如出现安全提示，立即通知支持者", "每周一早上发送简短周报"]
+    : isChineseLanguage(language)
+      ? ["每日晚上提醒完成症狀記錄", "如果出現安全提示，即刻通知支援者", "每週一早上發送簡短週報"]
+      : ["Evening reminder for symptom check-in", "Notify supporter immediately when a safety alert appears", "Send a simple weekly summary every Monday morning"];
   return <ListPanel title={text.partner.remindersTitle} items={rows} />;
 }
 
@@ -982,8 +987,8 @@ function FollowupQueue({ text, language, followups, updateFollowup }) {
       <section className="grid gap-3">
         <MobileToolTile title={t(language, "今日待跟進", "Due today")} value={String(followups.length)} detail={text.team.queueTitle} />
         <MobileToolTile title={t(language, "優先安全提示", "Priority alerts")} value={String(urgentCount)} detail={text.team.safetyTitle} tone={urgentCount ? "red" : "green"} />
-        <MobileToolTile title={t(language, "個案快速查看", "Quick case view")} value={followups[0]?.pilot_id || "--"} detail={followups[0] ? labelUser(followups[0].participant, language) : text.common.noData} />
-        <MobileToolTile title={t(language, "更新狀態", "Update status")} value={labelStatus("contacted", language)} detail={t(language, "一隻手即可處理", "One-handed update")} />
+        <MobileToolTile title={t(language, "個案快速睇", "Quick case view", "个案快速查看")} value={followups[0]?.pilot_id || "--"} detail={followups[0] ? labelUser(followups[0].participant, language) : text.common.noData} />
+        <MobileToolTile title={t(language, "更新狀態", "Update status")} value={labelStatus("contacted", language)} detail={t(language, "單手都處理到", "One-handed update", "一只手即可处理")} />
       </section>
       <div className="grid gap-3">
         {followups.map((row) => (
